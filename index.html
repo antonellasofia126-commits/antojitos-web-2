@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antojitos - Sistema Integral de Pedidos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        :root { --dorado: #d4af37; --negro: #050505; --blanco: #ffffff; --gris-oscuro: #111; --rojo-alerta: #c0392b; }
+        
+        body { background: var(--negro); color: var(--blanco); font-family: 'Poppins', sans-serif; margin: 0; padding-bottom: 80px; }
+        .container { width: 100%; max-width: 500px; margin: auto; background: #0a0a0a; border: 1px solid #222; min-height: 100vh; }
+        
+        /* HEADER */
+        .header { text-align: center; padding: 40px 20px; border-bottom: 2px solid var(--dorado); background: linear-gradient(to bottom, #111, #000); }
+        .header h1 { font-family: 'Playfair Display', serif; color: var(--dorado); font-size: 42px; margin: 0; letter-spacing: 2px; }
+        .slogan { font-family: 'Great Vibes', cursive; font-size: 22px; color: #eee; margin-top: 5px; }
+
+        /* SECCIONES Y PRODUCTOS */
+        .categoria { background: var(--dorado); color: black; padding: 12px; font-weight: 800; text-align: center; text-transform: uppercase; margin-top: 25px; position: sticky; top: 0; z-index: 10; letter-spacing: 1px; }
+        .producto { margin: 15px; padding: 18px; background: var(--gris-oscuro); border-radius: 12px; border: 1px solid #333; transition: 0.3s; }
+        .titulo-fila { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; padding-bottom: 8px; }
+        .titulo { font-weight: 600; font-size: 17px; color: var(--dorado); }
+        .precio { font-weight: bold; color: #fff; font-size: 16px; background: #222; padding: 2px 8px; border-radius: 5px; }
+        .descripcion { font-size: 11px; color: #999; margin: 8px 0; line-height: 1.4; font-weight: 300; }
+
+        /* PERSONALIZACIÓN */
+        .personalizar { background: #000; padding: 12px; border-radius: 8px; margin-top: 10px; border: 1px solid #222; }
+        .seccion-label { color: var(--dorado); font-size: 10px; font-weight: bold; display: block; margin-bottom: 8px; text-transform: uppercase; border-left: 3px solid var(--dorado); padding-left: 8px; }
+        .grid-opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        label { font-size: 11px; color: #ccc; cursor: pointer; display: flex; align-items: center; }
+        input[type="checkbox"], input[type="radio"] { margin-right: 8px; accent-color: var(--dorado); width: 15px; height: 15px; }
+        
+        .btn-pedir { background: linear-gradient(45deg, #b8860b, #d4af37); color: black; border: none; width: 100%; padding: 12px; font-weight: 800; border-radius: 6px; cursor: pointer; margin-top: 15px; text-transform: uppercase; transition: 0.2s; }
+        .btn-pedir:active { transform: scale(0.98); opacity: 0.9; }
+
+        /* PANEL DE CARLOS */
+        #panel-carlos { background: #151515; margin: 30px 15px; padding: 20px; border-radius: 15px; border: 2px solid var(--dorado); box-shadow: 0 0 20px rgba(212, 175, 55, 0.1); }
+        .comanda { background: #000; padding: 15px; border-left: 6px solid var(--dorado); margin-bottom: 12px; border-radius: 6px; position: relative; animation: entrada 0.4s ease-out; }
+        .comanda-n { color: var(--dorado); font-weight: bold; font-size: 14px; border-bottom: 1px solid #222; padding-bottom: 5px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .comanda-texto { font-size: 14px; color: #fff; line-height: 1.5; }
+        .btn-check { background: #27ae60; color: white; border: none; width: 100%; padding: 8px; margin-top: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        
+        @keyframes entrada { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>ANTOJITOS</h1>
+        <div class="slogan">Es más que un antojito y algo más...</div>
+    </div>
+
+    <!-- El menú completo se genera mediante JavaScript -->
+    <div id="menu-digital"></div>
+
+    <!-- PANEL DE ADMINISTRACIÓN -->
+    <div id="panel-carlos">
+        <h2 style="text-align:center; color:var(--dorado); margin-top:0; font-size:20px;">👨‍🍳 COMANDAS DE COCINA</h2>
+        <div id="lista-pedidos">
+            <p style="text-align:center; color:#555; font-size:12px;">No hay pedidos pendientes</p>
+        </div>
+    </div>
+</div>
+
+<audio id="audio-notif"><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg"></audio>
+
+<script>
+    // BASE DE DATOS COMPLETA DE ANTOJITOS
+    const datosMenu = [
+        {
+            cat: "Pollo a la Broaster",
+            desc: "Acompañado de ensalada y papa a la francesa",
+            items: [
+                {n: "1 Pieza de Pollo", p: "8.000"},
+                {n: "2 Piezas de Pollo", p: "12.000"},
+                {n: "3 Piezas de Pollo", p: "16.000"},
+                {n: "4 Piezas de Pollo", p: "21.000"},
+                {n: "8 Piezas de Pollo", p: "40.000"}
+            ]
+        },
+        {
+            cat: "Salchipapas",
+            desc: "Papas, salchicha, vegetales, queso y proteínas",
+            items: [
+                {n: "Personal: 'Ta bien'", p: "8.000"},
+                {n: "Mediana: 'Gustico'", p: "13.000"},
+                {n: "Súper Antojitos", p: "19.000"}
+            ]
+        },
+        {
+            cat: "Hamburguesas",
+            desc: "Incluyen vegetales, papitas, salsas y pan artesanal",
+            items: [
+                {n: "Mini (Croqueta)", p: "6.000"},
+                {n: "Mini (Pollo)", p: "7.000"},
+                {n: "Mini (Carne Mechada)", p: "8.000"},
+                {n: "Antojitos", p: "9.000"},
+                {n: "Momo", p: "13.000", mixta: true},
+                {n: "Trifásica", p: "19.000", mixta: true}
+            ]
+        },
+        {
+            cat: "Perros Calientes",
+            desc: "Pan, salchicha, papitas, salsas y adicionales",
+            items: [
+                {n: "Hambruno", p: "5.000"},
+                {n: "Especial", p: "9.000"},
+                {n: "Americano", p: "13.000"}
+            ]
+        }
+    ];
+
+    const menuContenedor = document.getElementById('menu-digital');
+
+    // GENERAR EL MENÚ DINÁMICAMENTE
+    datosMenu.forEach((seccion, sIdx) => {
+        let htmlSeccion = `<div class="categoria">${seccion.cat}</div>`;
+        
+        seccion.items.forEach((item, iIdx) => {
+            const idUnico = `prod-${sIdx}-${iIdx}`;
+            htmlSeccion += `
+                <div class="producto" id="${idUnico}">
+                    <div class="titulo-fila">
+                        <span class="titulo">${item.n}</span>
+                        <span class="precio">${item.p}</span>
+                    </div>
+                    <p class="descripcion">${seccion.desc}</p>
+                    
+                    <div class="personalizar">
+                        ${item.mixta ? `
+                            <span class="seccion-label">Elegir Proteína</span>
+                            <div class="grid-opciones" style="margin-bottom:10px;">
+                                <label><input type="radio" name="prot-${idUnico}" value="Mixta" checked> Mixta</label>
+                                <label><input type="radio" name="prot-${idUnico}" value="Carne"> Carne</label>
+                                <label><input type="radio" name="prot-${idUnico}" value="Pollo"> Pollo</label>
+                            </div>
+                        ` : ''}
+                        
+                        <span class="seccion-label">¿Sin qué lo desea?</span>
+                        <div class="grid-opciones">
+                            <label><input type="checkbox" class="opt" value="Sin Vegetales"> Sin Vegetales</label>
+                            <label><input type="checkbox" class="opt" value="Sin Salsas"> Sin Salsas</label>
+                            <label><input type="checkbox" class="opt" value="Sin Cebolla"> Sin Cebolla</label>
+                            <label><input type="checkbox" class="opt" value="Sin Papas"> Sin Papas</label>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-pedir" onclick="procesarPedido('${item.n}', '${idUnico}')">Pedir ahora</button>
+                </div>
+            `;
+        });
+        menuContenedor.innerHTML += htmlSeccion;
+    });
+
+    // LÓGICA DE COMANDAS
+    let numeroOrden = 1;
+
+    function procesarPedido(nombre, idDiv) {
+        const audio = document.getElementById('audio-notif');
+        audio.play();
+
+        const div = document.getElementById(idDiv);
+        const proteina = div.querySelector('input[type="radio"]:checked');
+        const extras = div.querySelectorAll('.opt:checked');
+        const listaExtras = Array.from(extras).map(e => e.value).join(", ");
+        const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        const lista = document.getElementById('lista-pedidos');
+        if(numeroOrden === 1) lista.innerHTML = ""; // Limpiar texto de vacío
+
+        const comanda = document.createElement('div');
+        comanda.className = 'comanda';
+        comanda.innerHTML = `
+            <div class="comanda-n">
+                <span>ORDEN #${numeroOrden}</span>
+                <span>${hora}</span>
+            </div>
+            <div class="comanda-texto">
+                <strong>${nombre}</strong> ${proteina ? `<br><i>Proteína: ${proteina.value}</i>` : ''}
+                <div style="margin-top:5px; color:var(--dorado); font-size:12px;">
+                    ${listaExtras ? '⚠️ ' + listaExtras : '✅ Preparación completa'}
+                </div>
+            </div>
+            <button class="btn-check" onclick="this.parentElement.remove()">DESPACHAR / LISTO</button>
+        `;
+
+        lista.prepend(comanda);
+        numeroOrden++;
+        
+        // Feedback visual de envío
+        const btn = div.querySelector('.btn-pedir');
+        const originalText = btn.innerText;
+        btn.innerText = "¡ENVIADO!";
+        btn.style.background = "#27ae60";
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.background = "";
+        }, 2000);
+    }
+</script>
+<div id="pantalla-inicio" style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--negro); z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+    <h1 style="color:var(--dorado); font-family:'Playfair Display'; margin-bottom:40px;">BIENVENIDO A ANTOJITOS</h1>
+    <button onclick="accesoCliente()" style="width:250px; padding:20px; margin:10px; background:var(--dorado); border:none; font-weight:bold; cursor:pointer; border-radius:10px;">SOY CLIENTE (Ver Menú)</button>
+    <button onclick="accesoCarlos()" style="width:250px; padding:20px; margin:10px; background:#222; color:var(--dorado); border:2px solid var(--dorado); font-weight:bold; cursor:pointer; border-radius:10px;">SOY CARLOS (Administrar)</button>
+</div>
+
+<script>
+    // FUNCIONES DE CONTROL DE ACCESO
+    function accesoCliente() {
+        document.getElementById('pantalla-inicio').style.display = 'none';
+        document.getElementById('menu-digital').style.display = 'block';
+        document.getElementById('panel-carlos').style.display = 'none'; // El cliente no ve el panel
+    }
+
+    function accesoCarlos() {
+        let pass = prompt("Introduce la clave de acceso:");
+        if (pass === "carlos2026") {
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            document.getElementById('menu-digital').style.display = 'none'; // Carlos no necesita ver el menú
+            document.getElementById('panel-carlos').style.display = 'block';
+        } else {
+            alert("Acceso denegado. Clave incorrecta.");
+        }
+    }
+
+    // MODIFICACIÓN PARA LA NOTIFICACIÓN
+    function despacharConNotificacion(nPedido) {
+        // En un sistema real, aquí enviaríamos un mensaje a la DB.
+        // Para tu proyecto, simularemos la salida de la orden.
+        alert("¡Notificación enviada al cliente del Pedido #" + nPedido + "!");
+        // Aquí se elimina la comanda del panel de Carlos
+        event.target.parentElement.remove();
+    }
+</script>
+<script>
+    // --- FUNCIÓN PARA ENVIAR (CLIENTE) ---
+    function procesarPedido(nombre, idDiv) {
+        const div = document.getElementById(idDiv);
+        const radio = div.querySelector('input[type="radio"]:checked');
+        const extras = div.querySelectorAll('.opt:checked');
+        
+        const nuevoPedido = {
+            id: Date.now(),
+            nombre: nombre,
+            proteina: radio ? radio.value : 'N/A',
+            detalles: Array.from(extras).map(e => e.value).join(", "),
+            hora: new Date().toLocaleTimeString()
+        };
+
+        // Guardar pedido
+        let pedidos = JSON.parse(localStorage.getItem('antojitos_pedidos') || '[]');
+        pedidos.push(nuevoPedido);
+        localStorage.setItem('antojitos_pedidos', JSON.stringify(pedidos));
+        
+        alert("¡Pedido enviado a Carlos!");
+        
+        // OPCIONAL: Si tienes el panel abierto en la misma pestaña, actualízalo
+        if(typeof actualizarPanelCarlos === 'function') actualizarPanelCarlos();
+    }
+
+    // --- ESCUCHADOR (CARLOS) ---
+    // Importante: El evento 'storage' se activa en Pestaña B cuando Pestaña A guarda algo.
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'antojitos_pedidos') {
+            console.log("Cambio detectado en otra pestaña..."); // Para ver en consola F12
+            actualizarPanelCarlos();
+            const audio = document.getElementById('audio-notif');
+            if(audio) audio.play();
+        }
+    });
+
+    // --- FUNCIÓN QUE DIBUJA EL PANEL ---
+    function actualizarPanelCarlos() {
+        const lista = document.getElementById('lista-pedidos');
+        if(!lista) return; // Si no estamos en la vista de Carlos, no hacer nada
+
+        const pedidos = JSON.parse(localStorage.getItem('antojitos_pedidos') || '[]');
+        lista.innerHTML = ""; 
+
+        if(pedidos.length === 0) {
+            lista.innerHTML = "<p style='text-align:center; color:#555;'>No hay pedidos pendientes.</p>";
+            return;
+        }
+
+        pedidos.forEach(p => {
+            const ticket = document.createElement('div');
+            ticket.className = 'comanda';
+            ticket.innerHTML = `
+                <div class="comanda-n"><span>ORDEN #${p.id.toString().slice(-4)}</span> <span>${p.hora}</span></div>
+                <div class="comanda-texto">
+                    <strong>${p.nombre}</strong> <br>
+                    <small>Proteína: ${p.proteina}</small> <br>
+                    <span style="color:#d4af37">${p.detalles || 'Completo'}</span>
+                </div>
+                <button class="btn-check" onclick="despacharOrden(${p.id})">LISTO</button>
+            `;
+            lista.appendChild(ticket);
+        });
+    }
+
+    // --- DESPACHAR (CARLOS) ---
+    function despacharOrden(id) {
+        let pedidos = JSON.parse(localStorage.getItem('antojitos_pedidos') || '[]');
+        pedidos = pedidos.filter(p => p.id !== id);
+        localStorage.setItem('antojitos_pedidos', JSON.stringify(pedidos));
+        actualizarPanelCarlos();
+    }
+</script>
+<script type="module">
+  // 1. Importamos la App y la Base de Datos (usamos la versión 10 que es más estable para web)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  // 2. Tu configuración (la que sacaste de la consola de Firebase)
+  const firebaseConfig = {
+    apiKey: "AIzaSyDpndWo-syEwXo__nBs-aD6rtDSTY36YCV",
+    authDomain: "antojitosweb.firebaseapp.com",
+    databaseURL: "https://antojitosweb-default-rtdb.firebaseio.com",
+    projectId: "antojitosweb",
+    storageBucket: "antojitosweb.firebasestorage.app",
+    messagingSenderId: "1018883428835",
+    appId: "1:1018883428835:web:bdb0f3b658ba3121a010d6",
+    measurementId: "G-HSV7MGM4FM"
+  };
+
+  // 3. Inicializamos los servicios
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const pedidosRef = ref(db, 'pedidos');
+
+  // --- FUNCIÓN PARA LOS CLIENTES (VECINOS) ---
+  // Esta función la llamas cuando alguien haga clic en "Pedir"
+  window.realizarPedido = function(nombreCliente, detallePedido) {
+    push(pedidosRef, {
+      cliente: nombreCliente,
+      pedido: detallePedido,
+      fecha: new Date().toLocaleString()
+    });
+  };
+
+  // --- FUNCIÓN PARA EL PANEL DE CARLOS ---
+  // Se activa sola cada vez que llega un pedido nuevo a la nube
+  onChildAdded(pedidosRef, (snapshot) => {
+    const nuevoPedido = snapshot.val();
+    
+    // Aquí llamas a la función que ya tienes para pintar el pedido en el HTML
+    if (typeof mostrarPedidoEnPantalla === "function") {
+        mostrarPedidoEnPantalla(nuevoPedido);
+    }
+
+    // Lógica del Audio (Mixkit) para que Carlos se entere
+    const sonido = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    sonido.play().catch(() => console.log("Carlos debe tocar la pantalla para activar el audio"));
+  });
+</script>
+
+</body>
+
+</html>
